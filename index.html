@@ -134,6 +134,39 @@
             color: #94a3b8;
         }
 
+
+        .auth-panel {
+            max-width: 520px;
+            margin: 28px auto;
+        }
+        .auth-panel p, .notice {
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+        .secondary-btn {
+            background: #475569;
+        }
+        #authMessage {
+            min-height: 1.4em;
+            color: #fbbf24;
+            overflow-wrap: anywhere;
+        }
+        #appArea[hidden], #authPanel[hidden] {
+            display: none !important;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+        .topbar button {
+            width: auto;
+            min-width: 120px;
+        }
+
         @media (max-width: 500px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -152,6 +185,25 @@
     <h1>Forensic Evidence Management System</h1>
     <p>Case Records and Evidence Tracking Dashboard</p>
 </header>
+
+
+<section id="authPanel" class="auth-panel">
+    <h2>Sign in to your account</h2>
+    <p>Sign in to access your own investigation cases and evidence records, or create an account.</p>
+    <form id="authForm">
+        <input id="authEmail" type="email" placeholder="Email address" autocomplete="email" required>
+        <input id="authPassword" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password" minlength="6" required>
+        <button id="signInBtn" type="submit">Sign In</button>
+        <button id="signUpBtn" class="secondary-btn" type="button">Create Account</button>
+    </form>
+    <p id="authMessage" role="status" aria-live="polite"></p>
+</section>
+
+<div id="appArea" hidden>
+    <div class="topbar">
+        <p class="notice">Signed in as <strong id="signedInEmail"></strong></p>
+        <button id="signOutBtn" class="secondary-btn" type="button">Sign Out</button>
+    </div>
 
 <main>
 
@@ -239,252 +291,374 @@
     </section>
 
 </main>
+</div>
 
 <footer>
     PBL Phase 2 | Forensic Evidence Management System
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const STORAGE_KEY = "forensicEvidenceProjectV1";
+    // Replace these two placeholders with your Supabase Project URL and Publishable key.
+    const SUPABASE_URL = "https://qvwnofbueqzzevnpudxq.supabase.co/rest/v1/";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_RzQY9CLm0-XTX5aEHHrK5A_1UrPLw8D";
 
+    const authPanel = document.getElementById("authPanel");
+    const appArea = document.getElementById("appArea");
+    const authMessage = document.getElementById("authMessage");
+    const authForm = document.getElementById("authForm");
+    const authEmail = document.getElementById("authEmail");
+    const authPassword = document.getElementById("authPassword");
+    const signInBtn = document.getElementById("signInBtn");
+    const signUpBtn = document.getElementById("signUpBtn");
+    const signOutBtn = document.getElementById("signOutBtn");
+
+    let supabaseClient = null;
+    let currentUser = null;
     let cases = [];
     let evidence = [];
 
-    try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-
-        if (saved && Array.isArray(saved.cases)
-            && Array.isArray(saved.evidence)) {
-            cases = saved.cases;
-            evidence = saved.evidence;
-        }
-    } catch (error) {
-        console.error("Could not load saved records.");
-    }
-
-    function saveData() {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                cases: cases,
-                evidence: evidence
-            }));
-        } catch (error) {
-            alert("Could not save data in this browser.");
-        }
-    }
-
     function escapeHTML(value) {
-        return String(value).replace(/[&<>"']/g, function (char) {
+        return String(value ?? "").replace(/[&<>"']/g, function (char) {
             return {
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;"
+                "&": "&amp;", "<": "&lt;", ">": "&gt;",
+                '"': "&quot;", "'": "&#39;"
             }[char];
         });
     }
 
+    function setAuthMessage(message) {
+        authMessage.textContent = message || "";
+    }
+
+    function showSignedOut(message = "") {
+        currentUser = null;
+        cases = [];
+        evidence = [];
+        authPanel.hidden = false;
+        appArea.hidden = true;
+        setAuthMessage(message);
+    }
+
+    function showSignedIn(user) {
+        currentUser = user;
+        authPanel.hidden = true;
+        appArea.hidden = false;
+        document.getElementById("signedInEmail").textContent = user.email || "Signed-in user";
+    }
+
+    function getClient() {
+        if (SUPABASE_URL.includes("PASTE_YOUR_") ||
+            SUPABASE_PUBLISHABLE_KEY.includes("PASTE_YOUR_")) {
+            throw new Error("Add your Supabase Project URL and Publishable key in the code before using login.");
+        }
+        if (!supabaseClient) {
+            supabaseClient = window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_PUBLISHABLE_KEY
+            );
+        }
+        return supabaseClient;
+    }
+
+    async function loadData() {
+        if (!currentUser) return;
+        const client = getClient();
+
+        const casesResult = await client
+            .from("cases")
+            .select("id,user_id,case_number,title,description,status,created_at")
+            .order("created_at", { ascending: false });
+
+        if (casesResult.error) throw casesResult.error;
+
+        cases = (casesResult.data || []).map(row => ({
+            dbId: row.id,
+            id: row.case_number,
+            title: row.title,
+            description: row.description
+        }));
+
+        const evidenceResult = await client
+            .from("evidence")
+            .select("id,user_id,case_id,evidence_number,evidence_name,evidence_type,description,collector,collected_at,status,created_at")
+            .order("created_at", { ascending: false });
+
+        if (evidenceResult.error) throw evidenceResult.error;
+
+        evidence = (evidenceResult.data || []).map(row => {
+            const linkedCase = cases.find(item => item.dbId === row.case_id);
+            return {
+                dbId: row.id,
+                id: row.evidence_number || row.id,
+                caseDbId: row.case_id,
+                caseId: linkedCase ? linkedCase.id : "Unknown case",
+                name: row.evidence_name,
+                description: row.description || "",
+                collector: row.collector || "",
+                status: row.status || "Collected",
+                createdAt: row.created_at
+            };
+        });
+        render();
+    }
+
     function render() {
-        document.getElementById("caseCount").textContent =
-            cases.length;
-
-        document.getElementById("evidenceCount").textContent =
-            evidence.length;
-
+        document.getElementById("caseCount").textContent = cases.length;
+        document.getElementById("evidenceCount").textContent = evidence.length;
         document.getElementById("examCount").textContent =
-            evidence.filter(item =>
-                item.status === "Under Examination"
-            ).length;
+            evidence.filter(item => item.status === "Under Examination").length;
 
         const caseSelect = document.getElementById("evidenceCase");
         const previousValue = caseSelect.value;
-
-        caseSelect.innerHTML =
-            '<option value="">Select investigation case</option>';
+        caseSelect.innerHTML = '<option value="">Select investigation case</option>';
 
         cases.forEach(item => {
             const option = document.createElement("option");
-            option.value = item.id;
+            option.value = item.dbId;
             option.textContent = item.id + " - " + item.title;
             caseSelect.appendChild(option);
         });
-
-        if (cases.some(item => item.id === previousValue)) {
+        if (cases.some(item => item.dbId === previousValue)) {
             caseSelect.value = previousValue;
         }
 
         const caseList = document.getElementById("caseList");
-
         if (cases.length === 0) {
-            caseList.innerHTML =
-                '<p class="empty">No cases registered yet.</p>';
+            caseList.innerHTML = '<p class="empty">No cases registered yet.</p>';
         } else {
             caseList.innerHTML = cases.map(item => `
                 <div class="evidence-item">
                     <h3>${escapeHTML(item.id)}</h3>
-                    <p><strong>Title:</strong>
-                    ${escapeHTML(item.title)}</p>
+                    <p><strong>Title:</strong> ${escapeHTML(item.title)}</p>
                     <p>${escapeHTML(item.description)}</p>
                 </div>
             `).join("");
         }
-
         renderEvidence();
     }
 
     function renderEvidence() {
-        const query = document.getElementById("search")
-            .value.toLowerCase().trim();
-
+        const query = document.getElementById("search").value.toLowerCase().trim();
         const filtered = evidence.filter(item => {
             const linkedCase = cases.find(c => c.id === item.caseId);
-
             const text = [
-                item.id,
-                item.caseId,
-                item.name,
-                item.description,
-                item.collector,
-                item.status,
-                linkedCase ? linkedCase.title : ""
+                item.id, item.caseId, item.name, item.description,
+                item.collector, item.status, linkedCase ? linkedCase.title : ""
             ].join(" ").toLowerCase();
-
             return text.includes(query);
         });
 
         const list = document.getElementById("evidenceList");
-
         if (filtered.length === 0) {
-            list.innerHTML =
-                '<p class="empty">No matching evidence records.</p>';
+            list.innerHTML = '<p class="empty">No matching evidence records.</p>';
             return;
         }
 
         list.innerHTML = filtered.map(item => `
             <div class="evidence-item">
                 <h3>${escapeHTML(item.name)}</h3>
-                <p><strong>Evidence ID:</strong>
-                ${escapeHTML(item.id)}</p>
-                <p><strong>Case ID:</strong>
-                ${escapeHTML(item.caseId)}</p>
-                <p><strong>Description:</strong>
-                ${escapeHTML(item.description)}</p>
-                <p><strong>Collected by:</strong>
-                ${escapeHTML(item.collector)}</p>
-                <p><strong>Status:</strong>
-                ${escapeHTML(item.status)}</p>
-
+                <p><strong>Evidence ID:</strong> ${escapeHTML(item.id)}</p>
+                <p><strong>Case ID:</strong> ${escapeHTML(item.caseId)}</p>
+                <p><strong>Description:</strong> ${escapeHTML(item.description)}</p>
+                <p><strong>Collected by:</strong> ${escapeHTML(item.collector)}</p>
+                <p><strong>Status:</strong> ${escapeHTML(item.status)}</p>
                 <label>Update status</label>
-                <select onchange="updateStatus('${escapeHTML(item.id)}', this.value)">
+                <select onchange="updateStatus('${escapeHTML(item.dbId)}', this.value)">
                     ${["Collected", "Under Examination", "Secured"]
-                        .map(status => `
-                            <option ${item.status === status ? "selected" : ""}
-                                >${status}</option>
-                        `).join("")}
+                        .map(status => `<option ${item.status === status ? "selected" : ""}>${status}</option>`)
+                        .join("")}
                 </select>
-
-                <button class="delete-btn"
-                    onclick="deleteEvidence('${escapeHTML(item.id)}')">
-                    Delete Record
-                </button>
+                <button class="delete-btn" onclick="deleteEvidence('${escapeHTML(item.dbId)}')">Delete Record</button>
             </div>
         `).join("");
     }
 
-    document.getElementById("caseForm")
-        .addEventListener("submit", function (event) {
-            event.preventDefault();
-
-            const id = document.getElementById("caseId")
-                .value.trim();
-
-            if (cases.some(item =>
-                item.id.toLowerCase() === id.toLowerCase())) {
-                alert("This Case ID already exists.");
-                return;
-            }
-
-            cases.push({
-                id: id,
-                title: document.getElementById("caseTitle")
-                    .value.trim(),
-                description: document.getElementById("caseDescription")
-                    .value.trim()
+    authForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        signInBtn.disabled = true;
+        signUpBtn.disabled = true;
+        setAuthMessage("Signing in…");
+        try {
+            const client = getClient();
+            const { data, error } = await client.auth.signInWithPassword({
+                email: authEmail.value.trim(),
+                password: authPassword.value
             });
+            if (error) throw error;
+            showSignedIn(data.user);
+            await loadData();
+        } catch (error) {
+            setAuthMessage(error.message || "Could not sign in.");
+        } finally {
+            signInBtn.disabled = false;
+            signUpBtn.disabled = false;
+        }
+    });
 
-            saveData();
+    signUpBtn.addEventListener("click", async function () {
+        signInBtn.disabled = true;
+        signUpBtn.disabled = true;
+        setAuthMessage("Creating account…");
+        try {
+            const client = getClient();
+            const { data, error } = await client.auth.signUp({
+                email: authEmail.value.trim(),
+                password: authPassword.value
+            });
+            if (error) throw error;
+            if (data.session && data.user) {
+                showSignedIn(data.user);
+                await loadData();
+            } else {
+                setAuthMessage("Account created. Check your email to confirm it, then sign in.");
+            }
+        } catch (error) {
+            setAuthMessage(error.message || "Could not create account.");
+        } finally {
+            signInBtn.disabled = false;
+            signUpBtn.disabled = false;
+        }
+    });
+
+    signOutBtn.addEventListener("click", async function () {
+        try {
+            const client = getClient();
+            const { error } = await client.auth.signOut();
+            if (error) throw error;
+            showSignedOut("You have signed out.");
+        } catch (error) {
+            alert(error.message || "Could not sign out.");
+        }
+    });
+
+    document.getElementById("caseForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        if (!currentUser) return;
+        const id = document.getElementById("caseId").value.trim();
+        if (cases.some(item => item.id.toLowerCase() === id.toLowerCase())) {
+            alert("This Case ID already exists.");
+            return;
+        }
+
+        const button = this.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+            const client = getClient();
+            const { error } = await client.from("cases").insert({
+                user_id: currentUser.id,
+                case_number: id,
+                title: document.getElementById("caseTitle").value.trim(),
+                description: document.getElementById("caseDescription").value.trim(),
+                status: "Open"
+            });
+            if (error) throw error;
             this.reset();
-            render();
-
+            await loadData();
             alert("Investigation case added successfully.");
-        });
+        } catch (error) {
+            alert("Could not add case: " + (error.message || "Unknown error"));
+        } finally {
+            button.disabled = false;
+        }
+    });
 
-    document.getElementById("evidenceForm")
-        .addEventListener("submit", function (event) {
-            event.preventDefault();
+    document.getElementById("evidenceForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        if (!currentUser) return;
+        const id = document.getElementById("evidenceId").value.trim();
+        if (evidence.some(item => item.id.toLowerCase() === id.toLowerCase())) {
+            alert("This Evidence ID already exists.");
+            return;
+        }
 
-            const id = document.getElementById("evidenceId")
-                .value.trim();
+        const caseDbId = document.getElementById("evidenceCase").value;
+        const selectedCase = cases.find(item => item.dbId === caseDbId);
+        if (!selectedCase) {
+            alert("Please create or select a valid case first.");
+            return;
+        }
 
-            if (evidence.some(item =>
-                item.id.toLowerCase() === id.toLowerCase())) {
-                alert("This Evidence ID already exists.");
-                return;
-            }
-
-            const caseId = document.getElementById("evidenceCase")
-                .value;
-
-            if (!cases.some(item => item.id === caseId)) {
-                alert("Please create or select a valid case first.");
-                return;
-            }
-
-            evidence.push({
-                id: id,
-                caseId: caseId,
-                name: document.getElementById("evidenceName")
-                    .value.trim(),
-                description: document.getElementById("evidenceDescription")
-                    .value.trim(),
-                collector: document.getElementById("collector")
-                    .value.trim(),
-                status: document.getElementById("evidenceStatus")
-                    .value,
-                createdAt: new Date().toISOString()
+        const button = this.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+            const client = getClient();
+            const { error } = await client.from("evidence").insert({
+                user_id: currentUser.id,
+                case_id: selectedCase.dbId,
+                evidence_number: id,
+                evidence_name: document.getElementById("evidenceName").value.trim(),
+                evidence_type: "Other",
+                description: document.getElementById("evidenceDescription").value.trim(),
+                collector: document.getElementById("collector").value.trim(),
+                collected_at: new Date().toISOString(),
+                status: document.getElementById("evidenceStatus").value
             });
-
-            saveData();
+            if (error) throw error;
             this.reset();
-            render();
-
+            await loadData();
             alert("Evidence registered successfully.");
-        });
+        } catch (error) {
+            alert("Could not register evidence: " + (error.message || "Unknown error"));
+        } finally {
+            button.disabled = false;
+        }
+    });
 
-    function updateStatus(id, status) {
-        const item = evidence.find(record => record.id === id);
-
-        if (!item) return;
-
-        item.status = status;
-        saveData();
-        render();
+    async function updateStatus(id, status) {
+        if (!currentUser) return;
+        try {
+            const client = getClient();
+            const { error } = await client.from("evidence")
+                .update({ status: status })
+                .eq("id", id)
+                .eq("user_id", currentUser.id);
+            if (error) throw error;
+            await loadData();
+        } catch (error) {
+            alert("Could not update status: " + (error.message || "Unknown error"));
+            await loadData().catch(() => {});
+        }
     }
 
-    function deleteEvidence(id) {
+    async function deleteEvidence(id) {
         if (!confirm("Delete this evidence record?")) return;
-
-        evidence = evidence.filter(item => item.id !== id);
-
-        saveData();
-        render();
+        if (!currentUser) return;
+        try {
+            const client = getClient();
+            const { error } = await client.from("evidence")
+                .delete()
+                .eq("id", id)
+                .eq("user_id", currentUser.id);
+            if (error) throw error;
+            await loadData();
+        } catch (error) {
+            alert("Could not delete evidence: " + (error.message || "Unknown error"));
+        }
     }
 
-    document.getElementById("search")
-        .addEventListener("input", renderEvidence);
+    document.getElementById("search").addEventListener("input", renderEvidence);
 
-    render();
+    async function startApp() {
+        try {
+            const client = getClient();
+            const { data, error } = await client.auth.getSession();
+            if (error) throw error;
+            if (data.session && data.session.user) {
+                showSignedIn(data.session.user);
+                await loadData();
+            } else {
+                showSignedOut();
+            }
+            client.auth.onAuthStateChange((_event, session) => {
+                if (!session) showSignedOut();
+            });
+        } catch (error) {
+            showSignedOut(error.message || "Setup error.");
+        }
+    }
+
+    startApp();
 </script>
 
 </body>
