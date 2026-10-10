@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forensic Evidence Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #101827;
+            color: #f1f5f9;
+        }
+
+        header {
+            background: #172235;
+            padding: 22px;
+            text-align: center;
+            border-bottom: 2px solid #38bdf8;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        header p {
+            color: #94a3b8;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .card strong {
+            font-size: 28px;
+            color: #38bdf8;
+        }
+
+        section {
+            background: #172235;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            padding: 12px;
+            margin: 7px 0;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        input, select, textarea {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: white;
+        }
+
+        button {
+            background: #0284c7;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0369a1;
+        }
+
+        .search {
+            margin-bottom: 15px;
+        }
+
+        .evidence-item {
+            background: #0f172a;
+            padding: 15px;
+            margin: 12px 0;
+            border-left: 4px solid #38bdf8;
+            border-radius: 7px;
+            overflow-wrap: anywhere;
+        }
+
+        .evidence-item p {
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .delete-btn {
+            background: #b91c1c;
+        }
+
+        .empty {
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 500px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 21px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Forensic Evidence Management System</h1>
+    <p>Case Records and Evidence Tracking Dashboard</p>
+</header>
+
+<main>
+
+    <div class="dashboard">
+        <div class="card">
+            <h3>Total Cases</h3>
+            <strong id="caseCount">0</strong>
+        </div>
+
+        <div class="card">
+            <h3>Total Evidence</h3>
+            <strong id="evidenceCount">0</strong>
+        </div>
+
+        <div class="card">
+            <h3>Under Examination</h3>
+            <strong id="examCount">0</strong>
+        </div>
+    </div>
+
+    <section>
+        <h2>Create Investigation Case</h2>
+
+        <form id="caseForm">
+            <input id="caseId" placeholder="Case ID (e.g. CASE-001)"
+                   required>
+
+            <input id="caseTitle" placeholder="Case title"
+                   required>
+
+            <textarea id="caseDescription"
+                      placeholder="Case description"
+                      required></textarea>
+
+            <button type="submit">Add Case</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Register Evidence</h2>
+
+        <form id="evidenceForm">
+            <input id="evidenceId"
+                   placeholder="Evidence ID (e.g. EV-001)"
+                   required>
+
+            <select id="evidenceCase" required>
+                <option value="">Select investigation case</option>
+            </select>
+
+            <input id="evidenceName"
+                   placeholder="Evidence name"
+                   required>
+
+            <textarea id="evidenceDescription"
+                      placeholder="Evidence description"
+                      required></textarea>
+
+            <input id="collector"
+                   placeholder="Collected by"
+                   required>
+
+            <select id="evidenceStatus">
+                <option>Collected</option>
+                <option>Under Examination</option>
+                <option>Secured</option>
+            </select>
+
+            <button type="submit">Register Evidence</button>
+        </form>
+    </section>
+
+    <section>
+        <h2>Evidence Records</h2>
+
+        <input class="search" id="search"
+               placeholder="Search evidence, case ID or collector...">
+
+        <div id="evidenceList"></div>
+    </section>
+
+    <section>
+        <h2>Investigation Cases</h2>
+        <div id="caseList"></div>
+    </section>
+
+</main>
+
+<footer>
+    PBL Phase 2 | Forensic Evidence Management System
+</footer>
+
+<script>
+    const STORAGE_KEY = "forensicEvidenceProjectV1";
+
+    let cases = [];
+    let evidence = [];
+
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (saved && Array.isArray(saved.cases)
+            && Array.isArray(saved.evidence)) {
+            cases = saved.cases;
+            evidence = saved.evidence;
+        }
+    } catch (error) {
+        console.error("Could not load saved records.");
+    }
+
+    function saveData() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                cases: cases,
+                evidence: evidence
+            }));
+        } catch (error) {
+            alert("Could not save data in this browser.");
+        }
+    }
+
+    function escapeHTML(value) {
+        return String(value).replace(/[&<>"']/g, function (char) {
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char];
+        });
+    }
+
+    function render() {
+        document.getElementById("caseCount").textContent =
+            cases.length;
+
+        document.getElementById("evidenceCount").textContent =
+            evidence.length;
+
+        document.getElementById("examCount").textContent =
+            evidence.filter(item =>
+                item.status === "Under Examination"
+            ).length;
+
+        const caseSelect = document.getElementById("evidenceCase");
+        const previousValue = caseSelect.value;
+
+        caseSelect.innerHTML =
+            '<option value="">Select investigation case</option>';
+
+        cases.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.id + " - " + item.title;
+            caseSelect.appendChild(option);
+        });
+
+        if (cases.some(item => item.id === previousValue)) {
+            caseSelect.value = previousValue;
+        }
+
+        const caseList = document.getElementById("caseList");
+
+        if (cases.length === 0) {
+            caseList.innerHTML =
+                '<p class="empty">No cases registered yet.</p>';
+        } else {
+            caseList.innerHTML = cases.map(item => `
+                <div class="evidence-item">
+                    <h3>${escapeHTML(item.id)}</h3>
+                    <p><strong>Title:</strong>
+                    ${escapeHTML(item.title)}</p>
+                    <p>${escapeHTML(item.description)}</p>
+                </div>
+            `).join("");
+        }
+
+        renderEvidence();
+    }
+
+    function renderEvidence() {
+        const query = document.getElementById("search")
+            .value.toLowerCase().trim();
+
+        const filtered = evidence.filter(item => {
+            const linkedCase = cases.find(c => c.id === item.caseId);
+
+            const text = [
+                item.id,
+                item.caseId,
+                item.name,
+                item.description,
+                item.collector,
+                item.status,
+                linkedCase ? linkedCase.title : ""
+            ].join(" ").toLowerCase();
+
+            return text.includes(query);
+        });
+
+        const list = document.getElementById("evidenceList");
+
+        if (filtered.length === 0) {
+            list.innerHTML =
+                '<p class="empty">No matching evidence records.</p>';
+            return;
+        }
+
+        list.innerHTML = filtered.map(item => `
+            <div class="evidence-item">
+                <h3>${escapeHTML(item.name)}</h3>
+                <p><strong>Evidence ID:</strong>
+                ${escapeHTML(item.id)}</p>
+                <p><strong>Case ID:</strong>
+                ${escapeHTML(item.caseId)}</p>
+                <p><strong>Description:</strong>
+                ${escapeHTML(item.description)}</p>
+                <p><strong>Collected by:</strong>
+                ${escapeHTML(item.collector)}</p>
+                <p><strong>Status:</strong>
+                ${escapeHTML(item.status)}</p>
+
+                <label>Update status</label>
+                <select onchange="updateStatus('${escapeHTML(item.id)}', this.value)">
+                    ${["Collected", "Under Examination", "Secured"]
+                        .map(status => `
+                            <option ${item.status === status ? "selected" : ""}
+                                >${status}</option>
+                        `).join("")}
+                </select>
+
+                <button class="delete-btn"
+                    onclick="deleteEvidence('${escapeHTML(item.id)}')">
+                    Delete Record
+                </button>
+            </div>
+        `).join("");
+    }
+
+    document.getElementById("caseForm")
+        .addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const id = document.getElementById("caseId")
+                .value.trim();
+
+            if (cases.some(item =>
+                item.id.toLowerCase() === id.toLowerCase())) {
+                alert("This Case ID already exists.");
+                return;
+            }
+
+            cases.push({
+                id: id,
+                title: document.getElementById("caseTitle")
+                    .value.trim(),
+                description: document.getElementById("caseDescription")
+                    .value.trim()
+            });
+
+            saveData();
+            this.reset();
+            render();
+
+            alert("Investigation case added successfully.");
+        });
+
+    document.getElementById("evidenceForm")
+        .addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const id = document.getElementById("evidenceId")
+                .value.trim();
+
+            if (evidence.some(item =>
+                item.id.toLowerCase() === id.toLowerCase())) {
+                alert("This Evidence ID already exists.");
+                return;
+            }
+
+            const caseId = document.getElementById("evidenceCase")
+                .value;
+
+            if (!cases.some(item => item.id === caseId)) {
+                alert("Please create or select a valid case first.");
+                return;
+            }
+
+            evidence.push({
+                id: id,
+                caseId: caseId,
+                name: document.getElementById("evidenceName")
+                    .value.trim(),
+                description: document.getElementById("evidenceDescription")
+                    .value.trim(),
+                collector: document.getElementById("collector")
+                    .value.trim(),
+                status: document.getElementById("evidenceStatus")
+                    .value,
+                createdAt: new Date().toISOString()
+            });
+
+            saveData();
+            this.reset();
+            render();
+
+            alert("Evidence registered successfully.");
+        });
+
+    function updateStatus(id, status) {
+        const item = evidence.find(record => record.id === id);
+
+        if (!item) return;
+
+        item.status = status;
+        saveData();
+        render();
+    }
+
+    function deleteEvidence(id) {
+        if (!confirm("Delete this evidence record?")) return;
+
+        evidence = evidence.filter(item => item.id !== id);
+
+        saveData();
+        render();
+    }
+
+    document.getElementById("search")
+        .addEventListener("input", renderEvidence);
+
+    render();
+</script>
+
+</body>
+</html>
