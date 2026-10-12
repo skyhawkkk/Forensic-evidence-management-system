@@ -6,88 +6,34 @@
     <title>Forensic Evidence Management System</title>
 
     <style>
-        :root {
-            color-scheme: dark;
-            --bg: #080d18;
-            --surface: #101827;
-            --surface-raised: #151f31;
-            --surface-soft: #0d1524;
-            --border: #26364c;
-            --text: #edf4ff;
-            --muted: #91a3bb;
-            --accent: #56e0d0;
-            --accent-strong: #23b8b0;
-            --danger: #ff647c;
-            --radius: 18px;
-            --shadow: 0 18px 45px rgba(0, 0, 0, .22);
-        }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(ellipse at 15% 0%, rgba(35,184,176,.12), transparent 35%), var(--bg);
-            color: var(--text);
-            line-height: 1.55;
-        }
-        header {
-            position: relative;
-            overflow: hidden;
-            padding: 36px 22px 32px;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(125deg, rgba(21,31,49,.98), rgba(9,17,31,.98));
-            text-align: left;
-        }
-        header::after {
-            content: ""; position: absolute; width: 250px; height: 250px; border-radius: 50%;
-            right: 7%; top: -150px; border: 1px solid rgba(86,224,208,.22);
-            box-shadow: 0 0 0 28px rgba(86,224,208,.025), 0 0 0 56px rgba(86,224,208,.025);
-            pointer-events: none;
-        }
-        .header-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
-        .eyebrow { color: var(--accent); font-size: 11px; letter-spacing: .2em; font-weight: 800; text-transform: uppercase; margin: 0 0 9px; }
-        header h1 { margin: 0; font-size: clamp(25px, 4vw, 38px); line-height: 1.15; letter-spacing: -.04em; }
-        header p { margin: 12px 0 0; max-width: 650px; color: var(--muted); }
-        main { max-width: 1120px; margin: 0 auto; padding: 24px 22px 36px; }
-        #authPanel { max-width: 490px; margin: 34px auto 60px; padding: 28px; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(145deg, var(--surface-raised), var(--surface)); box-shadow: var(--shadow); }
-        #authPanel h2 { font-size: 25px; letter-spacing: -.03em; }
-        #authPanel::before { content: "SECURE ACCESS / AUTHENTICATION"; display: block; color: var(--accent); font-size: 10px; letter-spacing: .16em; font-weight: 800; margin-bottom: 14px; }
-        .auth-panel p, .notice { color: var(--muted); line-height: 1.6; }
-        #authMessage { min-height: 1.5em; color: #ffd479; overflow-wrap: anywhere; font-size: 13px; }
-        #appArea[hidden], #authPanel[hidden] { display: none !important; }
-        .topbar { max-width: 1120px; margin: 20px auto 0; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-        .topbar .notice { margin: 0; padding: 10px 14px; background: rgba(16,24,39,.8); border: 1px solid var(--border); border-radius: 12px; overflow-wrap: anywhere; }
-        .topbar button { width: auto; min-width: 120px; margin: 0; }
-        .dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .card { position: relative; overflow: hidden; padding: 22px; border-radius: var(--radius); border: 1px solid var(--border); background: linear-gradient(145deg, #152237, #0f1828); box-shadow: 0 10px 25px rgba(0,0,0,.12); }
-        .card::after { content: ""; position: absolute; right: -25px; bottom: -45px; width: 120px; height: 120px; border: 1px solid rgba(86,224,208,.13); border-radius: 50%; box-shadow: 0 0 0 15px rgba(86,224,208,.025), 0 0 0 30px rgba(86,224,208,.025); }
-        .card h3 { position: relative; z-index: 1; margin: 0 0 12px; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
-        .card strong { position: relative; z-index: 1; font-size: 36px; line-height: 1; color: var(--accent); letter-spacing: -.04em; }
-        section:not(#authPanel) { padding: 23px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: rgba(16,24,39,.92); box-shadow: 0 10px 28px rgba(0,0,0,.10); }
-        section h2 { margin: 0 0 18px; font-size: 19px; letter-spacing: -.025em; display: flex; align-items: center; gap: 10px; }
-        section h2::before { content: ""; display: inline-block; width: 4px; height: 20px; border-radius: 8px; background: var(--accent); }
-        input, select, textarea, button { width: 100%; padding: 13px 14px; margin: 7px 0; border-radius: 10px; font: inherit; font-size: 14px; }
-        input, select, textarea { background: var(--surface-soft); border: 1px solid #2b3b52; color: var(--text); outline: none; transition: border-color .18s, box-shadow .18s; }
-        input::placeholder, textarea::placeholder { color: #687c96; }
-        input:focus, select:focus, textarea:focus { border-color: var(--accent-strong); box-shadow: 0 0 0 3px rgba(86,224,208,.11); }
-        textarea { min-height: 100px; resize: vertical; }
-        button { border: 1px solid transparent; background: linear-gradient(135deg, var(--accent), #47c6d2); color: #06151c; font-weight: 800; cursor: pointer; transition: transform .18s, filter .18s, opacity .18s; }
-        button:hover { filter: brightness(1.06); transform: translateY(-1px); }
-        button:active { transform: translateY(0); }
-        button:disabled { opacity: .55; cursor: wait; transform: none; }
-        .secondary-btn { background: #1b2a3e; border-color: #33465e; color: var(--text); }
-        .delete-btn { background: rgba(255,100,124,.12); border: 1px solid rgba(255,100,124,.35); color: #ff9cab; }
-        .search { margin-bottom: 15px; }
-        .evidence-item { background: linear-gradient(145deg, #111d2f, #0c1422); padding: 18px; margin: 12px 0; border: 1px solid #26384e; border-left: 3px solid var(--accent); border-radius: 13px; overflow-wrap: anywhere; }
-        .evidence-item h3 { margin: 0 0 12px; font-size: 16px; }
-        .evidence-item p { color: #b7c5d8; line-height: 1.65; margin: 7px 0; }
-        .evidence-item label { display: block; color: var(--muted); font-size: 12px; margin-top: 12px; }
-        .empty { color: var(--muted); text-align: center; padding: 24px 12px; border: 1px dashed #2c3b50; border-radius: 12px; }
-        footer { text-align: center; padding: 24px 16px 32px; color: #71839b; font-size: 12px; border-top: 1px solid rgba(38,54,76,.65); }
-        @media (min-width: 760px) { #caseForm, #evidenceForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: start; } #caseForm textarea, #evidenceForm textarea { min-height: 90px; } #caseForm button, #evidenceForm button { grid-column: 1 / -1; } }
-        @media (max-width: 650px) { header { padding: 28px 18px; } main { padding: 18px 14px 28px; } .topbar { padding: 0 14px; } .dashboard { grid-template-columns: 1fr; gap: 10px; } .card { padding: 18px; } .card strong { font-size: 30px; } section:not(#authPanel) { padding: 18px; } #authPanel { margin: 24px 14px 44px; padding: 22px; } }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+        :root{color-scheme:dark;--bg:#070b14;--panel:#101827;--panel2:#141f31;--line:#26354a;--text:#edf3ff;--muted:#91a1b8;--blue:#6487ff;--cyan:#56e0d0;--danger:#ff6f86;--radius:18px;--shadow:0 18px 45px rgba(0,0,0,.22)}
+        *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:22px}body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse at 0% 0%,rgba(100,135,255,.14),transparent 34%),radial-gradient(ellipse at 100% 20%,rgba(86,224,208,.07),transparent 28%),var(--bg);color:var(--text);line-height:1.55}
+        header{position:relative;overflow:hidden;padding:34px 24px 30px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,rgba(17,27,45,.98),rgba(8,14,25,.96));text-align:left}header:after{content:"";position:absolute;right:8%;top:-140px;width:290px;height:290px;border:1px solid rgba(100,135,255,.24);border-radius:50%;box-shadow:0 0 0 32px rgba(100,135,255,.035),0 0 0 64px rgba(86,224,208,.025);pointer-events:none}.header-inner{max-width:1180px;margin:auto;position:relative;z-index:1}.eyebrow{display:flex;align-items:center;gap:9px;color:var(--cyan);font-size:10px;letter-spacing:.19em;font-weight:800;text-transform:uppercase;margin:0 0 12px}.eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 13px rgba(86,224,208,.8)}header h1{margin:0;font-size:clamp(26px,4vw,39px);line-height:1.14;letter-spacing:-.045em}header p{margin:12px 0 0;max-width:700px;color:var(--muted)}
+        main{max-width:1180px;margin:0 auto;padding:26px 24px 38px}#authPanel{max-width:480px;margin:38px auto 70px;padding:30px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#152137,#0d1523);box-shadow:var(--shadow)}#authPanel h2{font-size:25px;letter-spacing:-.03em;margin-top:0}#authPanel:before{content:"SECURE ACCESS  /  AUTHENTICATION";display:block;color:var(--cyan);font-size:10px;letter-spacing:.16em;font-weight:800;margin-bottom:15px}.auth-panel p,.notice{color:var(--muted);line-height:1.65}#authMessage{min-height:1.5em;color:#ffd479;overflow-wrap:anywhere;font-size:13px}#appArea[hidden],#authPanel[hidden]{display:none!important}
+        .topbar{max-width:1180px;margin:20px auto 0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.topbar .notice{margin:0;padding:11px 15px;background:rgba(16,24,39,.82);border:1px solid var(--line);border-radius:12px;overflow-wrap:anywhere}.topbar button{width:auto;min-width:120px;margin:0}
+        .dashboard{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px}.card{position:relative;overflow:hidden;min-height:142px;padding:23px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(145deg,#16243a,#101827 78%);box-shadow:0 10px 25px rgba(0,0,0,.12);transition:transform .2s,border-color .2s}.card:hover{transform:translateY(-3px);border-color:#405578}.card:before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan),transparent)}.card:after{content:"";position:absolute;right:-32px;bottom:-52px;width:132px;height:132px;border:1px solid rgba(100,135,255,.16);border-radius:50%;box-shadow:0 0 0 17px rgba(100,135,255,.025),0 0 0 34px rgba(86,224,208,.02)}.card h3{position:relative;z-index:1;margin:0 0 16px;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.card strong{position:relative;z-index:1;font-size:39px;line-height:1;color:var(--text);letter-spacing:-.05em}.card:nth-child(2) strong{color:var(--blue)}.card:nth-child(3) strong{color:var(--cyan)}
+        section:not(#authPanel){padding:24px;margin-bottom:20px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(145deg,rgba(17,26,42,.97),rgba(12,19,31,.97));box-shadow:0 10px 28px rgba(0,0,0,.10)}section h2{margin:0 0 19px;font-size:18px;letter-spacing:-.025em;display:flex;align-items:center;gap:11px}section h2:before{content:"";display:inline-block;width:4px;height:21px;border-radius:8px;background:linear-gradient(var(--blue),var(--cyan));box-shadow:0 0 12px rgba(100,135,255,.25)}
+        input,select,textarea,button{width:100%;padding:13px 14px;margin:7px 0;border-radius:10px;font:inherit;font-size:14px}input,select,textarea{background:#0a1220;border:1px solid #2a3a51;color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s}input::placeholder,textarea::placeholder{color:#6f8098}input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(100,135,255,.13)}textarea{min-height:100px;resize:vertical}button{border:1px solid transparent;background:linear-gradient(120deg,#7893ff,#4f72e8);color:white;font-weight:800;cursor:pointer;transition:transform .18s,filter .18s,opacity .18s;box-shadow:0 6px 16px rgba(79,114,232,.13)}button:hover{filter:brightness(1.08);transform:translateY(-1px)}button:active{transform:translateY(0)}button:disabled{opacity:.55;cursor:wait;transform:none}.secondary-btn{background:#18253a;border-color:#33445d;color:var(--text);box-shadow:none}.delete-btn{background:rgba(255,111,134,.1);border:1px solid rgba(255,111,134,.35);color:#ff9cab;box-shadow:none}.search{margin-bottom:15px}.evidence-item{background:linear-gradient(145deg,#121e30,#0c1422);padding:19px;margin:12px 0;border:1px solid #28384e;border-left:3px solid var(--blue);border-radius:13px;overflow-wrap:anywhere}.evidence-item h3{margin:0 0 12px;font-size:16px;color:#f3f6ff}.evidence-item p{color:#b7c5d8;line-height:1.65;margin:7px 0}.evidence-item p strong{color:#e8eefb}.evidence-item label{display:block;color:var(--muted);font-size:12px;margin-top:12px}.empty{color:var(--muted);text-align:center;padding:25px 12px;border:1px dashed #304159;border-radius:12px;background:rgba(8,15,26,.45)}footer{text-align:center;padding:25px 16px 32px;color:#71839b;font-size:12px;border-top:1px solid rgba(38,53,74,.65)}
+        @media(min-width:760px){#caseForm,#evidenceForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start}#caseForm textarea,#evidenceForm textarea{min-height:90px}#caseForm button,#evidenceForm button{grid-column:1/-1;max-width:240px}}
+        @media(max-width:650px){header{padding:27px 18px}header:after{right:-180px}main{padding:18px 14px 28px}.topbar{padding:0 14px}.dashboard{grid-template-columns:1fr;gap:10px}.card{min-height:unset;padding:19px}.card strong{font-size:32px}section:not(#authPanel){padding:18px}#authPanel{margin:24px 14px 44px;padding:22px}.topbar button{min-width:100px}}
+        @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+    
+        /* Binalyze-inspired analyst workspace */
+        :root{color-scheme:light;--bg:#f3f5f9;--panel:#fff;--panel2:#f8faff;--line:#e2e7f0;--text:#202b3c;--muted:#778398;--blue:#315cf5;--cyan:#18b6bd;--danger:#d94b62;--radius:13px;--shadow:0 8px 28px rgba(25,42,76,.06)}
+        body{background:#f4f6fa;color:var(--text)}
+        header{padding:22px 26px;background:#fff;border-bottom:1px solid #e7ebf2;color:var(--text)}header:after{display:none}header .header-inner{max-width:none;margin-left:245px}header .eyebrow{color:#315cf5;font-size:10px}header .eyebrow:before{background:#315cf5;box-shadow:none}header h1{font-size:clamp(22px,2.4vw,30px);letter-spacing:-.03em}header p{margin-top:5px;color:#78849a;font-size:13px}
+        #authPanel{background:#fff;border:1px solid #e2e7f0;border-radius:16px;box-shadow:0 15px 45px rgba(29,49,91,.09);color:#202b3c}#authPanel:before{color:#315cf5}.auth-panel p,.notice{color:#78849a}
+        #appArea{min-height:65vh}.sidebar{position:absolute;left:0;top:0;width:224px;height:100%;min-height:100%;padding:23px 14px;background:#fff;border-right:1px solid #e4e9f1;display:flex;flex-direction:column;gap:5px}.brand-mark{display:flex;align-items:center;gap:10px;padding:2px 10px 25px;color:#1e2c42}.brand-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#315cf5;color:white;font-size:20px}.brand-mark b{display:block;font-size:15px;letter-spacing:.13em}.brand-mark small{display:block;color:#8b96a8;font-size:9px;letter-spacing:.12em;margin-top:1px}.nav-caption{padding:0 11px;margin:7px 0;color:#9aa4b5;font-size:9px;font-weight:800;letter-spacing:.16em}.nav-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:8px;color:#657188;text-decoration:none;font-size:12px;font-weight:650}.nav-link span{width:18px;text-align:center;font-size:16px}.nav-link:hover,.nav-link.active{background:#eef2ff;color:#315cf5}.sidebar-note{margin-top:auto;padding:13px 10px;border:1px solid #e8edf5;background:#fafbfe;border-radius:10px;display:flex;gap:9px;align-items:center}.sidebar-note b,.sidebar-note small{display:block}.sidebar-note b{font-size:10px}.sidebar-note small{font-size:9px;color:#8a95a8;margin-top:3px}.live-dot{width:7px;height:7px;background:#21b99a;border-radius:50%;box-shadow:0 0 0 4px #e2f8f1}
+        .workspace{margin-left:224px}.topbar{max-width:none;margin:0;padding:13px 25px;background:#fff;border-bottom:1px solid #e8ecf3}.topbar .notice{padding:8px 11px;background:#f8faff;border:1px solid #e7ebf3;border-radius:8px;font-size:11px}.topbar button{font-size:11px;padding:9px 13px;min-width:90px}
+        main{max-width:none;padding:24px 25px 38px}.workspace-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.workspace-heading .eyebrow{margin:0 0 5px;color:#315cf5;font-size:9px;letter-spacing:.15em}.workspace-heading h2{font-size:23px;margin:0;letter-spacing:-.04em}.workspace-subtitle{margin:5px 0 0;color:#8490a3;font-size:12px}.system-chip{display:flex;align-items:center;gap:7px;border:1px solid #dcefe9;background:#f0fbf7;color:#218c70;border-radius:20px;padding:7px 10px;font-size:9px;font-weight:800;white-space:nowrap}.system-chip i{width:6px;height:6px;background:#20b58e;border-radius:50%}
+        .dashboard{gap:13px;margin-bottom:18px}.card{min-height:118px;padding:19px 20px;background:#fff;border:1px solid #e5eaf2;border-radius:12px;box-shadow:0 3px 14px rgba(29,49,91,.035)}.card:before{height:3px;background:linear-gradient(90deg,#315cf5,#22b8bd)}.card:after{display:none}.card:hover{transform:translateY(-2px);border-color:#cdd7f3}.card h3{color:#7f8ba0;font-size:9px;letter-spacing:.09em;margin-bottom:13px}.card strong{font-size:34px;color:#25344b}.card:nth-child(2) strong{color:#315cf5}.card:nth-child(3) strong{color:#16a9a5}
+        section:not(#authPanel){padding:20px;margin-bottom:16px;background:#fff;border:1px solid #e5eaf2;border-radius:12px;box-shadow:0 3px 14px rgba(29,49,91,.025)}section h2{font-size:14px;margin-bottom:15px;color:#27364c}section h2:before{height:17px;width:3px;box-shadow:none}input,select,textarea,button{font-size:12px;border-radius:8px}input,select,textarea{background:#fbfcff;border:1px solid #dce3ee;color:#26354b}input::placeholder,textarea::placeholder{color:#9aa4b5}input:focus,select:focus,textarea:focus{border-color:#6482ff;box-shadow:0 0 0 3px rgba(49,92,245,.08)}button{background:#315cf5;box-shadow:none}button:hover{filter:brightness(1.04)}.secondary-btn{background:#f5f7fc;border-color:#dce3ee;color:#526079}.delete-btn{background:#fff2f3;border-color:#f4d5da;color:#c63e53}.evidence-item{background:#fbfcff;border:1px solid #e4e9f2;border-left:3px solid #315cf5;border-radius:9px;padding:16px}.evidence-item h3{color:#26354b;font-size:13px}.evidence-item p{color:#6d7a90;font-size:11px}.evidence-item p strong{color:#334158}.empty{color:#8b96a8;border-color:#dce3ee;background:#fbfcff}footer{margin-left:224px;background:#fff;border-top:1px solid #e8ecf3;color:#9aa4b5;font-size:10px}
+        @media(min-width:760px){#caseForm,#evidenceForm{gap:5px 12px}#caseForm button,#evidenceForm button{max-width:200px}}
+        @media(max-width:760px){header .header-inner{margin-left:0}.sidebar{position:relative;width:auto;height:auto;min-height:0;padding:12px;display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;border-right:0;border-bottom:1px solid #e4e9f1}.brand-mark{padding:2px 8px 8px;width:100%}.nav-caption,.sidebar-note{display:none}.nav-link{padding:8px 10px;font-size:11px}.workspace{margin-left:0}.topbar{padding:12px 14px}main{padding:18px 14px 28px}.dashboard{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.card{padding:14px 12px;min-height:98px}.card h3{font-size:8px;letter-spacing:.03em}.card strong{font-size:26px}.workspace-heading h2{font-size:20px}.system-chip{font-size:8px}footer{margin-left:0}}
+        @media(max-width:480px){.dashboard{grid-template-columns:1fr}.card{min-height:80px}.card h3{font-size:9px}.card strong{font-size:28px}.workspace-heading{align-items:flex-start;flex-direction:column}.system-chip{align-self:flex-start}header{padding:18px 15px}header h1{font-size:22px}}
+        .module-description{font-size:12px;color:#7b879a;margin:-5px 0 15px;line-height:1.6}.module-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.module-heading h2{margin-bottom:13px}.module-badge{display:inline-flex;align-items:center;border-radius:20px;padding:6px 9px;background:#edf2ff;color:#315cf5;font-size:9px;font-weight:800;letter-spacing:.06em;white-space:nowrap}.module-badge.pending{background:#fff6e5;color:#a96b08}.notice-box{padding:13px 15px;border:1px solid #f1dfb8;border-radius:9px;background:#fffbf2;color:#78633d;font-size:11px;line-height:1.65;margin:6px 0 14px}.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.module-record{padding:14px;border:1px solid #e4e9f2;border-radius:9px;background:#fbfcff;min-width:0}.module-record h3{margin:0 0 8px;font-size:12px;overflow-wrap:anywhere}.module-record p{margin:5px 0;color:#748198;font-size:11px;overflow-wrap:anywhere}.status-pill{display:inline-block;padding:4px 7px;border-radius:20px;background:#edf2ff;color:#315cf5;font-size:10px;font-weight:700}.integrity-card{display:flex;gap:15px;padding:18px;border:1px solid #f0dfb9;border-radius:11px;background:#fffaf0}.integrity-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:12px;background:#fff0cc;color:#9d6a13;font-size:24px}.integrity-card h3,.report-panel h3{margin:0 0 7px;font-size:13px;color:#2c3b51}.integrity-card p,.report-panel p{margin:0 0 8px;color:#6e7b90;font-size:11px;line-height:1.7}.muted-small{font-size:10px;color:#8994a6;line-height:1.6}.report-panel{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:17px;border:1px solid #e4e9f2;border-radius:10px;background:#fbfcff}.report-panel button{width:auto;min-width:190px;margin:0}.nav-link{cursor:pointer}.nav-link:focus-visible{outline:2px solid #315cf5;outline-offset:2px}
+        @media(max-width:760px){.module-grid{grid-template-columns:1fr}.report-panel{align-items:flex-start;flex-direction:column}.report-panel button{width:100%;min-width:0}.integrity-card{padding:14px}}
+        @media print{body{background:#fff!important;color:#111!important}.sidebar,.topbar,header,#authPanel,#cases form,#register-evidence form,#search,#evidence-records button,#printReportBtn,footer{display:none!important}.workspace,main{margin:0!important;padding:0!important;max-width:none!important}section:not(#authPanel),.card,.module-record,.report-panel,.integrity-card{box-shadow:none!important;break-inside:avoid;border-color:#ccc!important;background:#fff!important;color:#111!important}.module-description,.module-record p,.integrity-card p,.report-panel p{color:#444!important}.dashboard{grid-template-columns:repeat(3,1fr)!important}}
     </style>
 </head>
 
@@ -97,7 +43,7 @@
     <div class="header-inner">
         <p class="eyebrow">Digital Forensics • Investigation Workspace</p>
         <h1>Forensic Evidence<br>Management System</h1>
-        <p>Centralized case records, evidence registration, and investigation status tracking in one secure workspace.</p>
+        <p>A focused workspace for case intelligence, evidence registration, and investigation status tracking.</p>
     </div>
 </header>
 
@@ -115,6 +61,18 @@
 </section>
 
 <div id="appArea" hidden>
+    <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand-mark"><span class="brand-icon">✦</span><span><b>TRACE</b><small>FORENSIC SUITE</small></span></div>
+        <p class="nav-caption">WORKSPACE</p>
+        <a class="nav-link active" href="#overview"><span>▦</span> Dashboard</a>
+        <a class="nav-link" href="#cases"><span>▤</span> Investigations</a>
+        <a class="nav-link" href="#evidence-records"><span>◇</span> Evidence Vault</a>
+        <a class="nav-link" href="#chain-of-custody"><span>⇄</span> Chain of Custody</a>
+        <a class="nav-link" href="#integrity-verification"><span>✓</span> Integrity Verification</a>
+        <a class="nav-link" href="#reports"><span>▧</span> Reports</a>
+        <div class="sidebar-note"><span class="live-dot"></span><div><b>Workspace active</b><small>Secure session enabled</small></div></div>
+    </aside>
+    <div class="workspace">
     <div class="topbar">
         <p class="notice">Signed in as <strong id="signedInEmail"></strong></p>
         <button id="signOutBtn" class="secondary-btn" type="button">Sign Out</button>
@@ -122,14 +80,15 @@
 
 <main>
 
+    <div class="workspace-heading" id="overview"><div><p class="eyebrow">INVESTIGATION WORKSPACE</p><h2>Dashboard overview</h2><p class="workspace-subtitle">Monitor case activity and manage digital evidence.</p></div><span class="system-chip"><i></i> SYSTEM ONLINE</span></div>
     <div class="dashboard">
         <div class="card">
-            <h3>Total Cases</h3>
+            <h3>Active Case Records</h3>
             <strong id="caseCount">0</strong>
         </div>
 
         <div class="card">
-            <h3>Total Evidence</h3>
+            <h3>Evidence Items Logged</h3>
             <strong id="evidenceCount">0</strong>
         </div>
 
@@ -139,7 +98,7 @@
         </div>
     </div>
 
-    <section>
+    <section id="cases">
         <h2>Create Investigation Case</h2>
 
         <form id="caseForm">
@@ -157,7 +116,7 @@
         </form>
     </section>
 
-    <section>
+    <section id="register-evidence">
         <h2>Register Evidence</h2>
 
         <form id="evidenceForm">
@@ -191,8 +150,9 @@
         </form>
     </section>
 
-    <section>
-        <h2>Evidence Records</h2>
+    <section id="evidence-records">
+        <h2>Evidence Vault</h2>
+        <p class="module-description">Search and manage evidence metadata linked to your investigation cases.</p>
 
         <input class="search" id="search"
                placeholder="Search evidence, case ID or collector...">
@@ -201,11 +161,30 @@
     </section>
 
     <section>
-        <h2>Investigation Cases</h2>
+        <h2>Investigation Register</h2>
+        <p class="module-description">All investigation cases currently saved to your account.</p>
         <div id="caseList"></div>
     </section>
 
+    <section id="chain-of-custody">
+        <div class="module-heading"><div><h2>Chain of Custody</h2><p class="module-description">A summary of current evidence records and their recorded status.</p></div><span class="module-badge">BASIC RECORD VIEW</span></div>
+        <div class="notice-box"><strong>Audit-trail limitation:</strong> This version displays the current status and record creation time. It does not yet keep an append-only history of every transfer or status change.</div>
+        <div id="custodyList" class="module-grid"></div>
+    </section>
+
+    <section id="integrity-verification">
+        <div class="module-heading"><div><h2>Integrity Verification</h2><p class="module-description">Check the integrity features available in this version.</p></div><span class="module-badge pending">HASHING NOT CONFIGURED</span></div>
+        <div class="integrity-card"><div class="integrity-icon">⌁</div><div><h3>Cryptographic verification is not active</h3><p>This database currently stores evidence descriptions and metadata, not the original evidence files or a trusted SHA-256 hash. A reliable integrity check requires hashing the actual file at acquisition and comparing it with a securely stored reference hash.</p><p class="muted-small">No evidence will be marked “verified” by this screen until file storage and hash recording are implemented.</p></div></div>
+    </section>
+
+    <section id="reports">
+        <div class="module-heading"><div><h2>Reports</h2><p class="module-description">Create a printable summary from the cases and evidence currently loaded from Supabase.</p></div><span class="module-badge">METADATA SUMMARY</span></div>
+        <div class="report-panel"><div><h3>Investigation summary report</h3><p>Includes case totals, evidence totals, current evidence statuses, and case/evidence listings.</p></div><button id="printReportBtn" type="button">Generate / Print Report</button></div>
+        <p class="muted-small">This is a summary report, not a certified forensic report or a hash-verified chain-of-custody document.</p>
+    </section>
+
 </main>
+    </div>
 </div>
 
 <footer>
@@ -351,6 +330,20 @@
             `).join("");
         }
         renderEvidence();
+        renderCustodySummary();
+    }
+
+    function renderCustodySummary() {
+        const list = document.getElementById("custodyList");
+        if (!list) return;
+        if (evidence.length === 0) {
+            list.innerHTML = '<p class="empty">No evidence records available yet.</p>';
+            return;
+        }
+        list.innerHTML = evidence.map(item => {
+            const date = item.createdAt ? new Date(item.createdAt).toLocaleString() : "Not recorded";
+            return `<article class="module-record"><h3>${escapeHTML(item.id)} · ${escapeHTML(item.name)}</h3><p><strong>Case:</strong> ${escapeHTML(item.caseId)}</p><p><strong>Current status:</strong> <span class="status-pill">${escapeHTML(item.status)}</span></p><p><strong>Record created:</strong> ${escapeHTML(date)}</p></article>`;
+        }).join("");
     }
 
     function renderEvidence() {
@@ -553,6 +546,21 @@
     }
 
     document.getElementById("search").addEventListener("input", renderEvidence);
+
+    document.getElementById("printReportBtn").addEventListener("click", function () {
+        if (!currentUser) {
+            alert("Please sign in to generate a report.");
+            return;
+        }
+        window.print();
+    });
+
+    document.querySelectorAll(".nav-link").forEach(link => {
+        link.addEventListener("click", function () {
+            document.querySelectorAll(".nav-link").forEach(item => item.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
 
     async function startApp() {
         try {
